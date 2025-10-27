@@ -28,7 +28,13 @@ decorated = DrawdownDecorator(BetaDecorator(VolatilityDecorator(stock)))
 print(decorated.get_metrics())
 ```
 
-- `tests/test_patterns.py` — Unit tests validating the factory, singleton, and decorator outputs.
+- `tests/test_patterns.py` — Unit tests validating:
+	- Factory creation (Stock/Bond/ETF)
+	- Singleton `Config` behavior
+	- Decorator-enhanced analytics outputs (volatility, beta, drawdown)
+	- Observer notifications (`LoggerObserver`, `AlertObserver`)
+	- Command execute/undo logic via the engine's Command pattern
+	- Strategy outputs for `MeanReversionStrategy` and `BreakoutStrategy`
 
 ## Data / Inputs
 
@@ -37,7 +43,12 @@ print(decorated.get_metrics())
 
 ## Run the demo
 
-Run the cells in PatternDemo.ipynb
+You can run the notebook `PatternDemo.ipynb` or the small demo script that shows decorator stacking:
+
+```bash
+python3 demo_decorators.py
+```
+or open and run the cells in `PatternDemo.ipynb`.
 
 
 ## Run the unit tests
