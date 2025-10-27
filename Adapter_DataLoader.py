@@ -1,5 +1,7 @@
 import json
 import xml.etree.ElementTree as ET
+from datetime import datetime
+from models import MarketDataPoint
 
 # Problem: Standardize external data formats into MarketDataPoint objects.
 # Expectations:
@@ -8,13 +10,6 @@ import xml.etree.ElementTree as ET
 # BloombergXMLAdapter
 # Each exposes .get_data(symbol: str) -> MarketDataPoint.
 # Demonstrate ingestion from external_data_yahoo.json and external_data_bloomberg.xml.
-
-class MarketDataPoint:
-    def __init__(self, data: dict):
-        self.data = data
-        self.symbol = data.get('symbol') or data.get('ticker')
-        self.price = float(data.get('price') or data.get('last_price', 0))
-        self.timestamp = data.get('timestamp')
 
 class YahooFinanceAdapter:
     def __init__(self):
@@ -32,8 +27,12 @@ class YahooFinanceAdapter:
     def get_data(self, symbol: str) -> MarketDataPoint:
         for entry in self.data:
             if entry.get('symbol') == symbol or entry.get('ticker') == symbol:
-                return MarketDataPoint(entry)
-        # return MarketDataPoint(self.data[symbol])
+                return MarketDataPoint(
+                    timestamp=datetime.fromisoformat(entry.get('timestamp').replace('Z', '+00:00')),
+                    symbol=entry.get('symbol'),
+                    price=float(entry.get('price')),
+                    daily_volume=None
+                )
 
 
 class BloombergXMLAdapter:
@@ -68,5 +67,10 @@ class BloombergXMLAdapter:
     def get_data(self, symbol: str) -> MarketDataPoint:
         for entry in self.data:
             if entry.get('symbol') == symbol:
-                return MarketDataPoint(entry)
+                return MarketDataPoint(
+                    timestamp=datetime.fromisoformat(entry.get('timestamp').replace('Z', '+00:00')),
+                    symbol=entry.get('symbol'),
+                    price=float(entry.get('price')),
+                    daily_volume=None
+                )
         return None
