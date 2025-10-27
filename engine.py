@@ -63,6 +63,10 @@ class BacktestEngine:
         self.positions: Dict[str, Position] = {}
         self.trades: List[Trade] = []
         self.equity_curve: List[Tuple[datetime, float]] = []
+
+        # publisher
+        from patterns.Observer_SignalNotification import SignalPublisher
+        self.publisher = SignalPublisher()
     
     def load_market_data(self, filepath: str = 'inputs/market_data.csv') -> pd.DataFrame:
         """Load market data from CSV."""
@@ -107,6 +111,18 @@ class BacktestEngine:
                 self.trades.append(trade)
                 print(f"BUY:  {quantity} share(s) of {symbol} at ${price:.2f} | Cash: ${self.cash:.2f} | position: {self.positions[symbol].quantity}")
             else:
+                if hasattr(self, 'publisher'):
+                    signal_dict = {
+                        'timestamp': timestamp,
+                        'symbol': symbol,
+                        'price': price,
+                        'signal_type': 'INSUFFICIENT_FUNDS',
+                        'required_cash': cost,
+                        'available_cash': self.cash,
+                        'quantity': quantity,
+                        'action': action
+                    }
+                    self.publisher.notify(signal_dict)
                 print(f"INSUFFICIENT FUNDS: Cannot buy {symbol} at ${price:.2f} | Available: ${self.cash:.2f}")
         
         elif action == 'SELL':
@@ -118,6 +134,20 @@ class BacktestEngine:
                 pnl = (price - self.positions[symbol].avg_cost) * quantity if symbol in self.positions else 0
                 print(f"SELL: {quantity} share(s) of {symbol} at ${price:.2f} | PnL: ${pnl:.2f} | Cash: ${self.cash:.2f} | position: {self.positions[symbol].quantity}")
             else:
+                # Notify observers about insufficient position
+                available_quantity = self.positions.get(symbol, Position(symbol)).quantity if symbol in self.positions else 0
+                if hasattr(self, 'publisher'):
+                    signal_dict = {
+                        'timestamp': timestamp,
+                        'symbol': symbol,
+                        'price': price,
+                        'signal_type': 'INSUFFICIENT_POSITION',
+                        'available_quantity': available_quantity,
+                        'requested_quantity': quantity,
+                        'quantity': quantity,
+                        'action': action
+                    }
+                    self.publisher.notify(signal_dict)
                 print(f"INSUFFICIENT SHARES: Cannot sell {symbol} | Available: {self.positions.get(symbol, Position(symbol)).quantity if symbol in self.positions else 0}")
     
     def calculate_portfolio_value(self, df: pd.DataFrame, timestamp: datetime) -> float:

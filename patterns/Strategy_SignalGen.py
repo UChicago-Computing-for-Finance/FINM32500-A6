@@ -1,6 +1,8 @@
 import json
 from models import MarketDataPoint
 
+from patterns.Observer_SignalNotification import SignalPublisher
+
 # Problem: Support interchangeable trading strategies.
 # Expectations:
 # Create abstract Strategy.generate_signals(tick: MarketDataPoint) -> int.
@@ -23,7 +25,11 @@ class MeanReversionStrategy(Strategy):
         self.lookback_window = lookback_window
         self.threshold = threshold
         self.price_history = {}  # Internal state: {symbol: [prices]}
-    
+
+        self.publisher = SignalPublisher()
+        self.strategy_name = 'MeanReversionStrategy'
+
+
     def load_params(self, filepath: str = 'inputs/strategy_params.json'):
         with open(filepath, 'r') as f:
             params = json.load(f)
@@ -60,14 +66,39 @@ class MeanReversionStrategy(Strategy):
         
         # Calculate deviation from mean
         deviation = (price - mean_price) / mean_price
-        
+
         # Generate signals based on threshold
+        signal_value = 0
+        signal_type = 'NO_ACTION'
+        action = 'NONE'
+        
         if deviation < -self.threshold:  # Price is significantly below mean - BUY
-            return 1
+            signal_value = 1
+            signal_type = 'BUY'
+            action = 'BUY'
         elif deviation > self.threshold:  # Price is significantly above mean - SELL
-            return -1
+            signal_value = -1
+            signal_type = 'SELL'
+            action = 'SELL'
         else:
-            return 0  # NO ACTION
+            signal_value = 0
+            signal_type = 'NO_ACTION'
+            action = 'NONE'
+        
+        # Notify observers if there's a signal
+        if signal_value != 0:
+            signal_dict = {
+                'timestamp': tick.timestamp,
+                'symbol': symbol,
+                'price': price,
+                'signal_type': signal_type,
+                'signal_value': signal_value,
+                'strategy_name': self.strategy_name,
+                'action': action
+            }
+            self.publisher.notify(signal_dict)
+        
+        return signal_value
 
 
 class BreakoutStrategy(Strategy):
@@ -75,6 +106,9 @@ class BreakoutStrategy(Strategy):
         self.lookback_window = lookback_window
         self.threshold = threshold
         self.price_history = {}  # Internal state: {symbol: [prices]}
+
+        self.publisher = SignalPublisher()
+        self.strategy_name = 'BreakoutStrategy'
     
     def load_params(self, filepath: str = 'inputs/strategy_params.json'):
         with open(filepath, 'r') as f:
@@ -117,9 +151,34 @@ class BreakoutStrategy(Strategy):
         downward_breakout = low_price * (1 - self.threshold)
         
         # Generate signals based on breakout
+        signal_value = 0
+        signal_type = 'NO_ACTION'
+        action = 'NONE'
+        
         if price > upward_breakout:  # Price breaks above resistance - BUY
-            return 1
+            signal_value = 1
+            signal_type = 'BUY'
+            action = 'BUY'
         elif price < downward_breakout:  # Price breaks below support - SELL
-            return -1
+            signal_value = -1
+            signal_type = 'SELL'
+            action = 'SELL'
         else:
-            return 0  # NO ACTION
+            signal_value = 0
+            signal_type = 'NO_ACTION'
+            action = 'NONE'
+        
+        # Notify observers if there's a signal
+        if signal_value != 0:
+            signal_dict = {
+                'timestamp': tick.timestamp,
+                'symbol': symbol,
+                'price': price,
+                'signal_type': signal_type,
+                'signal_value': signal_value,
+                'strategy_name': self.strategy_name,
+                'action': action
+            }
+            self.publisher.notify(signal_dict)
+        
+        return signal_value
