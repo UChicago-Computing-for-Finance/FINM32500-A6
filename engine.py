@@ -8,6 +8,8 @@ from collections import defaultdict
 from patterns.Strategy_SignalGen import Strategy, MeanReversionStrategy, BreakoutStrategy
 from models import MarketDataPoint
 
+from patterns.Command_TradeExecution import CommandInvoker
+
 
 @dataclass
 class Trade:
@@ -67,6 +69,9 @@ class BacktestEngine:
         # publisher
         from patterns.Observer_SignalNotification import SignalPublisher
         self.publisher = SignalPublisher()
+
+        # command invoker
+        self.command_invoker = CommandInvoker()
     
     def load_market_data(self, filepath: str = 'inputs/market_data.csv') -> pd.DataFrame:
         """Load market data from CSV."""
@@ -86,8 +91,23 @@ class BacktestEngine:
             price=row['price']
         )
     
-    def execute_trade(self, timestamp: datetime, symbol: str, action: str, price: float, quantity: int = 1):
+    def execute_trade(self, timestamp: datetime, symbol: str, action: str, price: float, quantity: int = 1, use_command_pattern: bool = False):
         """Execute a trade and update portfolio state."""
+
+        if use_command_pattern:
+            # Use Command pattern
+            from patterns.Command_TradeExecution import ExecuteOrderCommand
+            command = ExecuteOrderCommand(
+                engine=self,
+                timestamp=timestamp,
+                symbol=symbol,
+                action=action,
+                price=price,
+                quantity=quantity
+            )
+            return self.command_invoker.execute_command(command)
+
+
         cost = price * quantity
         
         # Create trade record
