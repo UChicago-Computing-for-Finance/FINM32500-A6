@@ -10,7 +10,7 @@ if ROOT not in sys.path:
 
 from patterns.Factory_InstrumentTypes import InstrumentFactory, Stock, Bond, ETF
 from patterns.Singleton_ConfigAccess import Config
-from analytics import VolatilityDecorator, BetaDecorator, DrawdownDecorator
+from Decorator_Analytics import VolatilityDecorator, BetaDecorator, DrawdownDecorator
 
 
 class TestFactorySingletonDecorators(unittest.TestCase):

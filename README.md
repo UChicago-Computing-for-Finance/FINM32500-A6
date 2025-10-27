@@ -16,7 +16,7 @@ python3 -m pip install -r requirements.txt
 
 - `patterns/Factory_InstrumentTypes.py` — Instrument base class and `InstrumentFactory` that creates `Stock`, `Bond`, and `ETF` instances from dictionaries or CSV rows.
 - `patterns/Singleton_ConfigAccess.py` — Simple singleton `Config` class that loads `inputs/config.json` so all modules share the same configuration instance.
-- `analytics.py` — Decorator-based analytics implementations. Contains:
+- `Decorator_Analytics.py` — Decorator-based analytics implementations. Contains:
 	- `InstrumentDecorator` (base wrapper)
 	- `VolatilityDecorator` (computes std of simple returns from `inputs/market_data.csv`)
 	- `BetaDecorator` (computes beta vs a market proxy, default `SPY`)
