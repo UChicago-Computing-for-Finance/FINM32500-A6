@@ -15,6 +15,7 @@ class Instrument:
 
 class InstrumentFactory:
 
+    @staticmethod
     def create_instrument(data: dict) -> Instrument:
 
         instrument_type = data.get('type', '').lower()
@@ -28,6 +29,7 @@ class InstrumentFactory:
         else:
             raise ValueError(f"Invalid instrument type: {instrument_type}")
 
+    @staticmethod
     def load_from_csv(filepath: str):
 
         instruments = []
@@ -52,7 +54,7 @@ class Bond(Instrument):
     def __init__(self, data: dict):
         super().__init__(data)
         self.instrument_type = 'bond'
-        self.maturity = data['maturity']
+        self.maturity = data.get('maturity')
         
 class ETF(Instrument):
     def __init__(self, data: dict):
